@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* FixPoint design tokens (exposed as Tailwind utilities: bg-ink, text-body, border-line ...) */
+@theme {
+  --color-ink: #0e0f13;
+  --color-body: #3f4452;
+  --color-muted: #5a5f6e;
+  --color-page: #f3f4f7;
+  --color-line: #e4e6ec;
+  --color-field: #d5d8e0;
+  --color-accent: #1e4fd8;
+  --color-accent-dark: #163ba6;
+  --color-tint: #eaf0ff;
+  --color-sky: #9db5ff;
+  --color-success: #0f7a4a;
+  --color-success-tint: #e6f6ee;
+  --color-whatsapp: #128c4a;
+  --color-star: #e8a317;
+  --color-danger: #b42318;
+  --color-photo: #dde1e8;
+
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans bg-page text-ink antialiased;
+  }
+}
