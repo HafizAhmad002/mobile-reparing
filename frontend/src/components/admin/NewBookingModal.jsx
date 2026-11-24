@@ -22,7 +22,7 @@ const EMPTY = { name: '', phone: '', address: '', postcode: '', brand: '', model
 
 /*
   "+ New booking" for customers who phone or WhatsApp. Same rules as the website:
-  UK phone and postcode, service area, working days, time off and free slots.
+  Phone number (any country), UK postcode, service area, working days, time off and free slots.
 */
 export default function NewBookingModal({ open, onClose, preset }) {
   const [f, setF] = useState(EMPTY)

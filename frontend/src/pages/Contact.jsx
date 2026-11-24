@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Check, Clock, Mail, MessageCircle, Phone, Truck } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Field from '../components/ui/Field'
@@ -27,7 +27,7 @@ export default function Contact() {
     const err = {}
     if (!form.name.trim()) err.name = 'Please enter your name.'
     if (!form.contact.trim()) err.contact = 'Please enter an email or phone number.'
-    else if (!/@/.test(form.contact) && !normaliseUkPhone(form.contact)) err.contact = 'Please enter an email address or a UK phone number.'
+    else if (!/@/.test(form.contact) && !normaliseUkPhone(form.contact)) err.contact = 'Please enter an email address or a phone number.'
     if (form.topic === OTHER && !form.otherTopic.trim()) err.otherTopic = 'Please type your topic.'
     if (!form.message.trim()) err.message = 'Please write your message.'
     setErrors(err)

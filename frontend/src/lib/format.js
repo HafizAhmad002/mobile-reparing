@@ -42,26 +42,29 @@ export const MAX_DAYS_AHEAD = 60
 export const lastBookableDay = () => { const d = new Date(); d.setDate(d.getDate() + MAX_DAYS_AHEAD); return isoDay(d) }
 
 /* -------------------------------- phones ------------------------------- */
-// Accepts 07700 900123, +44 7700 900123, 0044…, landlines like 0161 496 0000.
-// Returns E.164 ("+447700900123") or null when it is not a UK number.
+// Any phone number is accepted (UK or another country).
+//  - UK numbers (07700 900123, +44 7700 900123, 0044…, 0161 496 0000) are saved as "+447700900123"
+//  - International with + or 00 (+92 300 1234567) are saved as "+923001234567"
+//  - Anything else with 7–15 digits (e.g. 03001234567) is saved as typed, without spaces
+// Returns null only when it cannot be a phone number (letters, too short or too long).
 export function normaliseUkPhone(input) {
-  let digits = String(input || '').replace(/[\s()-]/g, '')
-  if (!digits) return null
-  if (digits.startsWith('+')) digits = digits.slice(1)
-  else if (digits.startsWith('00')) digits = digits.slice(2)
-  else if (digits.startsWith('0')) digits = `44${digits.slice(1)}`
-  else return null
-  if (!/^44\d+$/.test(digits)) return null
-  const national = digits.slice(2)
-  // Mobiles: 7xxx xxxxxx (10 digits). Landlines / non-geographic: 1, 2, 3, 8 + 9–10 digits.
-  if (/^7\d{9}$/.test(national) || /^[1238]\d{8,9}$/.test(national)) return `+${digits}`
-  return null
+  const raw = String(input || '').trim()
+  if (!raw || !/^\+?[\d\s().-]+$/.test(raw)) return null
+  let digits = raw.replace(/\D/g, '')
+  if (digits.length < 7 || digits.length > 15) return null
+  const intl = raw.startsWith('+') || digits.startsWith('00')
+  if (!raw.startsWith('+') && digits.startsWith('00')) digits = digits.slice(2)
+  // UK first, so the same number is always saved the same way
+  const uk = intl ? (digits.startsWith('44') ? digits.slice(2) : null) : (digits.startsWith('0') ? digits.slice(1) : null)
+  // (a local "03…" number is left as typed: it is also how Pakistani mobiles are written)
+  if (uk && (/^7\d{9}$/.test(uk) || (intl ? /^[1238]\d{8,9}$/ : /^[128]\d{8,9}$/).test(uk))) return `+44${uk}`
+  return intl ? `+${digits}` : digits
 }
 
 // Stored "+447700900123" (or an older raw number) -> "07700 900123" for display
 export function formatUkPhone(value) {
-  const e164 = normaliseUkPhone(value) || (String(value || '').startsWith('+44') ? String(value) : null)
-  if (!e164) return value || ''
+  const e164 = normaliseUkPhone(value)
+  if (!e164 || !e164.startsWith('+44')) return value || '' // other countries: shown as entered
   const n = `0${e164.slice(3)}`
   if (n.startsWith('07') || n.startsWith('08')) return `${n.slice(0, 5)} ${n.slice(5)}`
   if (n.startsWith('02')) return `${n.slice(0, 3)} ${n.slice(3, 7)} ${n.slice(7)}`
@@ -75,7 +78,7 @@ export function samePhone(a, b) {
   return Boolean(na) && na === nb
 }
 
-export const PHONE_ERROR = 'Please enter a UK phone number, e.g. 07700 900123.'
+export const PHONE_ERROR = 'Please enter a valid phone number, e.g. 07700 900123 or +92 300 1234567.'
 
 /* ------------------------------- postcodes ----------------------------- */
 // Full UK postcode, e.g. "M60 2LA", "SW1A 1AA", "OL1 3BE"

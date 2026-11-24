@@ -6,7 +6,8 @@ import Button from '../components/ui/Button'
 import Field from '../components/ui/Field'
 import Photo from '../components/ui/Photo'
 import useDocumentTitle from '../hooks/useDocumentTitle'
-import { logIn, signUp, useSession } from '../lib/store'
+import { adminLockedFor, hash, logIn, recordAdminTry, signUp, unlockAdmin, useSession } from '../lib/store'
+import { ADMIN_ACCOUNTS } from '../lib/testAccounts'
 import { PHONE_ERROR, normaliseUkPhone } from '../lib/format'
 
 const EMPTY = { name: '', email: '', phone: '', password: '', marketingConsent: false }
@@ -34,7 +35,20 @@ export default function Login() {
     if (mode === 'signup' && (!form.name.trim() || !form.phone.trim())) return setError('Please enter your name and phone number.')
     if (mode === 'signup' && !normaliseUkPhone(form.phone)) return setError(PHONE_ERROR)
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError('Please enter a valid email address.')
-    if (form.password.length < 8) return setError('Your password needs at least 8 characters.')
+    // Admin email: log in to the admin panel instead of a customer account
+    const mail = form.email.trim().toLowerCase()
+    const admin = mode === 'login' && ADMIN_ACCOUNTS.find((a) => a.emails.includes(mail))
+    if (admin) {
+      const wait = adminLockedFor()
+      if (wait) return setError(`Too many wrong tries. Try again in ${wait} minute${wait > 1 ? 's' : ''}.`)
+      const ok = admin.passwordHash === (await hash(form.password))
+      recordAdminTry(ok)
+      if (!ok) return setError('Email or password is not correct.')
+      unlockAdmin()
+      return navigate('/admin')
+    }
+    if (mode === 'signup' && form.password.length < 8) return setError('Your password needs at least 8 characters.')
+    if (!form.password) return setError('Please enter your password.')
     setBusy(true)
     try {
       if (mode === 'signup') await signUp({ ...form, phone: normaliseUkPhone(form.phone) })

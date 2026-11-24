@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ArrowRight, CalendarPlus, ClipboardList, Search, LogOut, Menu, MessageSquare, Smartphone, User, UserRound, X } from 'lucide-react'
+import { ArrowRight, CalendarPlus, ClipboardList, LayoutDashboard, Search, LogOut, Menu, MessageSquare, Smartphone, User, UserRound, X } from 'lucide-react'
 import Button from './ui/Button'
 import Avatar from './ui/Avatar'
 import Popover from './ui/Popover'
 import CustomerBell from './CustomerBell'
-import { logOut, useSession } from '../lib/store'
+import { isAdminUnlocked, logOut, useSession } from '../lib/store'
 
 export const NAV_LINKS = [
   { label: 'Services', to: '/services' },
@@ -67,13 +67,24 @@ function AccountButton() {
   )
 }
 
+// Admin logged in (this tab): a button back to the admin panel
+function AdminLink() {
+  useLocation() // re-check on every page change
+  if (!isAdminUnlocked()) return null
+  return (
+    <Link to="/admin" className="inline-flex h-11 items-center gap-2 rounded-full bg-accent px-3.5 text-sm font-bold text-white hover:bg-accent-dark">
+      <LayoutDashboard size={16} aria-hidden="true" /><span className="hidden sm:inline">Admin panel</span>
+    </Link>
+  )
+}
+
 // Logged in: a clear "My bookings" button on the bar (bigger screens)
 function MyBookingsLink() {
   const session = useSession()
   if (!session) return null
   return (
-    <NavLink to="/my-bookings" className={({ isActive }) => `hidden h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors md:inline-flex ${isActive ? 'border-accent bg-tint text-accent' : 'border-field bg-white text-ink hover:border-ink'}`}>
-      <ClipboardList size={16} aria-hidden="true" /> My bookings
+    <NavLink to="/my-bookings" className={({ isActive }) => `hidden h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition-colors md:inline-flex xl:px-4 ${isActive ? 'border-accent bg-tint text-accent' : 'border-field bg-white text-ink hover:border-ink'}`}>
+      <ClipboardList size={16} aria-hidden="true" /><span className="sr-only xl:not-sr-only">My bookings</span>
     </NavLink>
   )
 }
@@ -133,13 +144,13 @@ export default function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav aria-label="Main" className="hidden items-center gap-0.5 lg:flex">
+        <nav aria-label="Main" className="hidden items-center gap-0.5 min-[900px]:flex">
           {NAV_LINKS.map((l) => (
             <NavLink
               key={l.to}
               to={l.to}
               className={({ isActive }) =>
-                `inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold transition-colors ${
+                `inline-flex min-h-11 items-center rounded-full px-2 text-[13px] font-semibold transition-colors xl:px-3 xl:text-sm ${
                   isActive
                     ? 'bg-white text-ink ring-1 ring-line'
                     : 'text-body hover:bg-white/70 hover:text-ink'
@@ -152,13 +163,14 @@ export default function Header() {
         </nav>
 
         {/* Right actions */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
+          <AdminLink />
           <MyBookingsLink />
           <CustomerBell />
           <AccountButton />
           <div className="hidden sm:block">
             <Button to="/book" variant="dark">
-              Book a repair <ArrowRight size={16} strokeWidth={2} />
+              Book<span className="hidden xl:inline">&nbsp;a repair</span> <ArrowRight size={16} strokeWidth={2} />
             </Button>
           </div>
           <button
@@ -166,7 +178,7 @@ export default function Header() {
             aria-label="Open menu"
             aria-expanded={open}
             onClick={() => setOpen(true)}
-            className="grid size-11 place-items-center rounded-full border border-field bg-white text-ink lg:hidden"
+            className="grid size-11 place-items-center rounded-full border border-field bg-white text-ink min-[900px]:hidden"
           >
             <Menu size={20} strokeWidth={2} />
           </button>
