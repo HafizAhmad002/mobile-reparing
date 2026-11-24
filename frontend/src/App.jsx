@@ -1,4 +1,5 @@
-﻿import { Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Services from './pages/Services'
@@ -14,7 +15,10 @@ import Blog from './pages/Blog'
 import BlogPost from './pages/BlogPost'
 import Login from './pages/Login'
 import Account from './pages/Account'
-import Admin from './pages/Admin'
+// Admin is split into its own file, so customers never download the admin code
+const Admin = lazy(() => import('./pages/Admin'))
+import MyRepairs from './pages/MyRepairs'
+import Receipt from './pages/Receipt'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 
@@ -30,6 +34,7 @@ export default function App() {
           <Route path="/prices" element={<Prices />} />
           <Route path="/book" element={<Booking />} />
           <Route path="/track" element={<Track />} />
+          <Route path="/track/:ref" element={<Track />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/areas" element={<Areas />} />
           <Route path="/about" element={<About />} />
@@ -38,11 +43,14 @@ export default function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/my-bookings" element={<MyRepairs />} />
+          <Route path="/account/repairs" element={<Navigate to="/my-bookings" replace />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         {/* Own layouts (built in later tasks) */}
         <Route path="/login" element={<Login />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<Suspense fallback={<div className="grid min-h-screen place-items-center text-muted">Loading…</div>}><Admin /></Suspense>} />
+        <Route path="/receipt/:id" element={<Receipt />} />
       </Routes>
     </>
   )

@@ -11,6 +11,8 @@ const VARIANTS = {
   white: 'bg-white text-ink hover:bg-tint',
 }
 const SIZES = { md: 'h-12 px-6 text-[15px]', lg: 'h-[52px] px-7 text-base' }
+// Disabled buttons are grey (never the brand blue), so it is clear they can't be pressed yet
+const DISABLED = 'disabled:cursor-not-allowed disabled:border-transparent disabled:bg-[#D5D8E0] disabled:text-white disabled:hover:bg-[#D5D8E0]'
 
 // Renders <Link> with "to", <a> with "href", otherwise <button>.
 export default function Button({
@@ -23,8 +25,8 @@ export default function Button({
   ...rest
 }) {
   const reduce = useReducedMotion()
-  const cls = `inline-flex min-h-11 items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap transition-colors duration-200 ${VARIANTS[variant]} ${SIZES[size]} ${className}`
-  const motionProps = reduce ? {} : { whileHover: { y: -2 }, whileTap: { scale: 0.98 }, transition: { duration: 0.2 } }
+  const cls = `inline-flex min-h-11 items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap transition-colors duration-200 ${VARIANTS[variant]} ${SIZES[size]} ${DISABLED} ${className}`
+  const motionProps = reduce || rest.disabled ? {} : { whileHover: { y: -2 }, whileTap: { scale: 0.98 }, transition: { duration: 0.2 } }
 
   if (to) {
     return <MotionLink to={to} className={cls} {...motionProps} {...rest}>{children}</MotionLink>

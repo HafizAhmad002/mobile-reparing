@@ -11,6 +11,3 @@ export const SITE = {
   hours: '[Opening hours]',
 }
 
-// TEMPORARY front-end-only passcode for /admin until the Django API handles real admin login.
-// Do not rely on this for security: anyone can read it in the browser.
-export const ADMIN_PASSCODE = 'fixpoint-admin'

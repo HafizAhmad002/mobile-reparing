@@ -6,15 +6,24 @@ import Pill from '../components/ui/Pill'
 import AccessoryImage from '../components/ui/AccessoryImage'
 import Button from '../components/ui/Button'
 import Field from '../components/ui/Field'
+import Select from '../components/ui/Select'
 import useDocumentTitle from '../hooks/useDocumentTitle'
 import { accessories, accessoryCategories } from '../data/accessories'
 import { phoneBrands, tabletBrands } from '../data/catalog'
 import { SITE } from '../data/site'
 import { addOrder, useSession } from '../lib/store'
+import { inStock, useStock } from '../lib/stock'
+import { PHONE_ERROR, POSTCODE_ERROR, formatUkPhone, isUkPostcode, normalisePostcode, normaliseUkPhone } from '../lib/format'
 
 const money = (n) => `£${n.toFixed(2)}`
 const NOT_LISTED = '__other__'
 const allBrands = [...phoneBrands, ...tabletBrands]
+const BRAND_OPTIONS = [
+  ...phoneBrands.map((b) => ({ value: b.name, label: b.name, group: 'Phones' })),
+  ...tabletBrands.map((b) => ({ value: b.name, label: b.name, group: 'Tablets' })),
+  { value: NOT_LISTED, label: 'My brand is not listed', group: 'Other' },
+]
+const HERO_ITEMS = ['case-clear', 'cable-usbc', 'earphones', 'charger-wall'].map((id) => `/images/accessories/${id}.webp`)
 
 export default function Shop() {
   useDocumentTitle('Phone Accessories — FixPoint Manchester', 'Simple, locally sourced phone accessories: cases, screen glass, cables and chargers. No big brands.')
@@ -23,12 +32,14 @@ export default function Shop() {
   const [cat, setCat] = useState('all')
   const [cart, setCart] = useState({}) // { productId: qty }
   const [device, setDevice] = useState({ brand: '', model: '', customBrand: '', customModel: '' })
-  const [form, setForm] = useState({ name: session?.name || '', phone: session?.phone || '', address: '', postcode: '' })
+  const [form, setForm] = useState({ name: session?.name || '', phone: formatUkPhone(session?.phone) || '', address: session?.address || '', postcode: session?.postcode || '' })
   const [error, setError] = useState('')
   const [done, setDone] = useState(null)
   const [sheet, setSheet] = useState(false) // order panel as a bottom sheet on small screens
 
-  const list = accessories.filter((a) => cat === 'all' || a.category === cat)
+  const stock = useStock()
+  // Items at 0 stock are hidden
+  const list = accessories.filter((a) => (cat === 'all' || a.category === cat) && inStock(stock, a.id))
   const lines = useMemo(() => Object.entries(cart).map(([id, qty]) => ({ ...accessories.find((a) => a.id === id), qty })), [cart])
   const count = lines.reduce((n, l) => n + l.qty, 0)
   const priced = lines.every((l) => l.price != null)
@@ -62,10 +73,12 @@ export default function Shop() {
     if (!form.name.trim() || !form.phone.trim() || !form.address.trim() || !form.postcode.trim()) {
       return setError('Please fill in your name, phone number, address and postcode.')
     }
+    if (!normaliseUkPhone(form.phone)) return setError(PHONE_ERROR)
+    if (!isUkPostcode(form.postcode)) return setError(POSTCODE_ERROR)
     const order = addOrder({
       type: 'accessory',
       userEmail: session?.email || null,
-      customer: { name: form.name.trim(), phone: form.phone.trim(), email: '', address: form.address.trim(), postcode: form.postcode.trim().toUpperCase() },
+      customer: { name: form.name.trim(), phone: normaliseUkPhone(form.phone), email: '', address: form.address.trim(), postcode: normalisePostcode(form.postcode) },
       device: { kind: brandObj?.kind || 'phone', brand: finalBrand, model: finalModel }, // the phone the accessories are for
       items: lines.map((l) => ({ id: l.id, name: l.name, qty: l.qty, price: l.price })),
       price: priced ? total : null,
@@ -111,12 +124,7 @@ export default function Shop() {
           <fieldset className="mt-5 rounded-2xl bg-tint p-4">
             <legend className="px-1 text-[13px] font-extrabold text-accent">Which phone is it for?</legend>
             <div className="space-y-3">
-              <Field label="Brand" as="select" value={device.brand} onChange={(e) => setDevice({ brand: e.target.value, model: '', customBrand: '', customModel: '' })}>
-                <option value="">Select brand</option>
-                <optgroup label="Phones">{phoneBrands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}</optgroup>
-                <optgroup label="Tablets">{tabletBrands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}</optgroup>
-                <option value={NOT_LISTED}>My brand is not listed</option>
-              </Field>
+              <Select label="Brand" placeholder="Select brand" value={device.brand} onChange={(v) => setDevice({ brand: v, model: '', customBrand: '', customModel: '' })} options={BRAND_OPTIONS} />
               {device.brand === NOT_LISTED ? (
                 <>
                   <Field label="Your brand" value={device.customBrand} onChange={setD('customBrand')} placeholder="Type your brand" />
@@ -124,11 +132,8 @@ export default function Shop() {
                 </>
               ) : (
                 <>
-                  <Field label="Model" as="select" value={device.model} onChange={setD('model')} disabled={!brandObj}>
-                    <option value="">{brandObj ? 'Select model' : 'Choose a brand first'}</option>
-                    {brandObj?.models.map((m) => <option key={m.id} value={m.name}>{m.name}</option>)}
-                    {brandObj && <option value={NOT_LISTED}>My model is not listed</option>}
-                  </Field>
+                  <Select label="Model" placeholder={brandObj ? 'Select model' : 'Choose a brand first'} value={device.model} onChange={(v) => setDevice((d) => ({ ...d, model: v }))} disabled={!brandObj}
+                    options={brandObj ? [...brandObj.models.map((m) => ({ value: m.name, label: m.name })), { value: NOT_LISTED, label: 'My model is not listed' }] : []} />
                   {device.model === NOT_LISTED && <Field label="Your model" value={device.customModel} onChange={setD('customModel')} placeholder="Type your model" />}
                 </>
               )}
@@ -151,34 +156,44 @@ export default function Shop() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-6">
-      <section className="pt-12 md:pt-16">
-        <p className="mb-3 text-[13px] font-bold uppercase tracking-[0.08em] text-accent">Accessories</p>
-        <h1 className="max-w-[760px] text-[clamp(38px,5vw,60px)] font-extrabold leading-[1.04] tracking-[-0.035em]">Simple accessories, fair prices</h1>
-        <p className="mt-5 max-w-[600px] text-[17px] leading-relaxed text-muted">
-          Cases, screen glass, cables and chargers sourced locally. We don’t sell big-brand products — just good-quality basics. Order here and we will confirm the price and bring it to you.
-        </p>
+      <section className="grid items-center gap-8 pt-10 md:grid-cols-[1.1fr_0.9fr] md:gap-10 md:pt-16 [&>*]:min-w-0">
+        <div>
+          <p className="mb-3 text-[13px] font-bold uppercase tracking-[0.08em] text-accent">Accessories</p>
+          <h1 className="max-w-[760px] text-[clamp(38px,5vw,60px)] font-extrabold leading-[1.04] tracking-[-0.035em]">Simple accessories, fair prices</h1>
+          <p className="mt-5 max-w-[600px] text-[17px] leading-relaxed text-muted">
+            Cases, screen glass, cables and chargers sourced locally. We don’t sell big-brand products — just good-quality basics. Order here and we will confirm the price and bring it to you.
+          </p>
+        </div>
+        {/* Hero picture: four of our accessories. Loaded first (eager), not lazily. */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4" aria-hidden="true">
+          {HERO_ITEMS.map((src, i) => (
+            <div key={src} className={`overflow-hidden rounded-[24px] border border-line bg-white ${i % 2 ? 'translate-y-4 sm:translate-y-6' : ''}`}>
+              <img src={src} alt="" width="400" height="400" loading="eager" fetchPriority={i < 2 ? 'high' : 'auto'} decoding="async" className="aspect-square w-full object-cover" />
+            </div>
+          ))}
+        </div>
       </section>
 
-      <div className="mt-10 flex flex-wrap gap-2" role="group" aria-label="Filter accessories">
+      <div className="mt-12 flex flex-wrap gap-2 md:mt-16" role="group" aria-label="Filter accessories">
         {accessoryCategories.map((c) => <Pill key={c.id} active={cat === c.id} onClick={() => setCat(c.id)}>{c.label}</Pill>)}
       </div>
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_360px]">
-        <Stagger key={cat} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Stagger key={cat} className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
           {list.map((a) => {
             const qty = cart[a.id] || 0
             return (
               <StaggerItem key={a.id}>
-                <article className="group flex h-full flex-col rounded-[24px] border border-line bg-white p-4 pb-6 transition duration-200 hover:-translate-y-1 hover:border-[#C9D6FF]">
-                  <AccessoryImage item={a} className="aspect-[4/5] w-full rounded-[18px]" />
-                  <h2 className="mt-4 px-2 text-lg font-extrabold leading-tight tracking-[-0.02em]">{a.name}</h2>
-                  <p className="mt-1.5 flex-1 px-2 text-sm leading-relaxed text-muted">{a.text}</p>
-                  <div className="mt-5 flex items-center justify-between gap-3 px-2">
-                    <p className="text-base font-extrabold">{a.price != null ? money(a.price) : SITE.price}</p>
+                <article className="group flex h-full min-w-0 flex-col rounded-[20px] border border-line bg-white p-2.5 pb-3 transition duration-200 hover:-translate-y-1 hover:border-[#C9D6FF] sm:rounded-[24px] sm:p-4 sm:pb-6">
+                  <AccessoryImage item={a} className="aspect-square w-full rounded-[14px] sm:aspect-[4/5] sm:rounded-[18px]" />
+                  <h2 className="mt-3 px-1 text-[15px] font-extrabold leading-tight tracking-[-0.02em] sm:mt-4 sm:px-2 sm:text-lg">{a.name}</h2>
+                  <p className="mt-1.5 flex-1 px-1 text-[13px] leading-relaxed text-muted sm:px-2 sm:text-sm">{a.text}</p>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 sm:mt-5 sm:gap-3 sm:px-2">
+                    <p className="text-[15px] font-extrabold sm:text-base">{a.price != null ? money(a.price) : SITE.price}</p>
                     {qty === 0 ? (
-                      <Button onClick={() => change(a.id, 1)} className="!h-11 !px-5 !text-sm">Add</Button>
+                      <Button onClick={() => change(a.id, 1)} className="!h-11 !px-5 !text-sm max-sm:w-full">Add</Button>
                     ) : (
-                      <div className="inline-flex items-center rounded-full border border-field">
+                      <div className="inline-flex items-center rounded-full border border-field max-sm:w-full max-sm:justify-between">
                         <button type="button" aria-label={`Remove one ${a.name}`} onClick={() => change(a.id, -1)} className="grid size-11 place-items-center"><Minus size={16} strokeWidth={2} /></button>
                         <span className="min-w-6 text-center text-sm font-bold" aria-live="polite">{qty}</span>
                         <button type="button" aria-label={`Add one more ${a.name}`} onClick={() => change(a.id, 1)} className="grid size-11 place-items-center"><Plus size={16} strokeWidth={2} /></button>

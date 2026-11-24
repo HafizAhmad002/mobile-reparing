@@ -1,6 +1,6 @@
 // Works out an ESTIMATE from the client's price list (data/prices.js) for a device + problems.
 // It is only an estimate: the final price is always confirmed with the customer before work starts.
-import { androidRows, iphoneRows } from '../data/prices'
+import { androidRows, extraRows, iphoneRows } from '../data/prices'
 
 const lower = (s) => String(s || '').trim().toLowerCase()
 
@@ -8,12 +8,16 @@ const lower = (s) => String(s || '').trim().toLowerCase()
 function findRow({ kind, brand, model }, issue) {
   // Free checks apply to every device
   if (issue === 'unsure' || issue === 'water-damage') return { free: true }
+  // Extra services (data backup, unlocking...) have one price for every device
+  const extra = extraRows.find((r) => r.id === issue)
+  if (extra) return extra
   if (kind !== 'phone') return null // tablets are quoted individually
 
   const isApple = lower(brand) === 'apple'
   const rows = isApple ? iphoneRows : androidRows
   return (
     rows.find((r) => {
+      if (r.hidden) return false
       if (r.issue !== issue) return false
       if (r.models) return r.models.map(lower).includes(lower(model))
       if (r.pattern) return new RegExp(r.pattern).test(model) && lower(brand) === 'samsung'

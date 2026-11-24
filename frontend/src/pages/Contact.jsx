@@ -2,10 +2,12 @@
 import { Check, Clock, Mail, MessageCircle, Phone, Truck } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Field from '../components/ui/Field'
+import Select from '../components/ui/Select'
 import useDocumentTitle from '../hooks/useDocumentTitle'
 import { contactTopics, OTHER } from '../data/content'
 import { SITE } from '../data/site'
 import { addMessage } from '../lib/store'
+import { normaliseUkPhone } from '../lib/format'
 
 const ways = [
   { icon: MessageCircle, title: 'WhatsApp', text: 'Fastest way to reach us', href: SITE.whatsapp, label: 'Open WhatsApp' },
@@ -25,6 +27,7 @@ export default function Contact() {
     const err = {}
     if (!form.name.trim()) err.name = 'Please enter your name.'
     if (!form.contact.trim()) err.contact = 'Please enter an email or phone number.'
+    else if (!/@/.test(form.contact) && !normaliseUkPhone(form.contact)) err.contact = 'Please enter an email address or a UK phone number.'
     if (form.topic === OTHER && !form.otherTopic.trim()) err.otherTopic = 'Please type your topic.'
     if (!form.message.trim()) err.message = 'Please write your message.'
     setErrors(err)
@@ -83,9 +86,7 @@ export default function Contact() {
                 <Field label="Email or phone" value={form.contact} onChange={setF('contact')} />
                 {errors.contact && <p className="mt-1 text-xs font-semibold text-danger">{errors.contact}</p>}
               </div>
-              <Field className="sm:col-span-2" label="Topic" as="select" value={form.topic} onChange={setF('topic')}>
-                {contactTopics.map((t) => <option key={t}>{t}</option>)}
-              </Field>
+              <Select className="sm:col-span-2" label="Topic" value={form.topic} onChange={(v) => setForm((f) => ({ ...f, topic: v }))} options={contactTopics.map((t) => ({ value: t, label: t }))} />
               {form.topic === OTHER && (
                 <div className="sm:col-span-2">
                   <Field label="Your topic" value={form.otherTopic} onChange={setF('otherTopic')} placeholder="What is your message about?" />

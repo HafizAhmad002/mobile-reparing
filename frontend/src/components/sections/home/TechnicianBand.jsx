@@ -13,7 +13,7 @@ export default function TechnicianBand() {
   return (
     <section className="mx-auto max-w-[1200px] px-6">
       <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
-        <div className="flex min-h-[260px] flex-col justify-between rounded-[28px] bg-ink p-8 text-white md:p-10">
+        <div className="flex flex-col justify-between rounded-[28px] bg-ink p-6 text-white sm:p-8 md:p-10 lg:min-h-[260px]">
           <h2 className="max-w-[460px] text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.1] tracking-[-0.03em]">
             One technician. Real repairs. Right at your door.
           </h2>
@@ -24,7 +24,7 @@ export default function TechnicianBand() {
         <Stagger className="grid gap-4">
           {tiles.map(({ icon: Icon, title, text }) => (
             <StaggerItem key={title}>
-              <div className="flex items-center gap-4 rounded-[24px] border border-line bg-white p-5 transition duration-200 hover:-translate-y-1 hover:border-[#C9D6FF]">
+              <div className="flex items-center gap-4 rounded-[24px] border border-line bg-white p-4 transition sm:p-5 duration-200 hover:-translate-y-1 hover:border-[#C9D6FF]">
                 <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-tint text-accent"><Icon size={22} strokeWidth={2} /></span>
                 <div>
                   <p className="text-base font-extrabold tracking-[-0.02em]">{title}</p>

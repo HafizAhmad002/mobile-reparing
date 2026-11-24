@@ -1,5 +1,5 @@
-﻿import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, Smartphone } from 'lucide-react'
 import Button from '../components/ui/Button'
@@ -7,14 +7,16 @@ import Field from '../components/ui/Field'
 import Photo from '../components/ui/Photo'
 import useDocumentTitle from '../hooks/useDocumentTitle'
 import { logIn, signUp, useSession } from '../lib/store'
+import { PHONE_ERROR, normaliseUkPhone } from '../lib/format'
 
-const EMPTY = { name: '', email: '', phone: '', password: '' }
+const EMPTY = { name: '', email: '', phone: '', password: '', marketingConsent: false }
 
 // Own layout (no header/footer): photo on the left, form on the right
 export default function Login() {
   useDocumentTitle('Log in or Sign up — FixPoint', 'Log in to see your repairs, or create a free FixPoint account.')
   const reduce = useReducedMotion()
   const navigate = useNavigate()
+  const location = useLocation()
   const session = useSession()
   const [mode, setMode] = useState('login') // 'login' | 'signup'
   const [form, setForm] = useState(EMPTY)
@@ -22,19 +24,22 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
   const setF = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
-  if (session) return <Navigate to="/account" replace />
+  // After logging in: back to where they came from, else straight to their bookings
+  const dest = location.state?.from || (mode === 'signup' ? '/account' : '/my-bookings')
+  if (session) return <Navigate to={dest} replace />
 
   const onSubmit = async (e) => {
     e.preventDefault()
     setError('')
     if (mode === 'signup' && (!form.name.trim() || !form.phone.trim())) return setError('Please enter your name and phone number.')
+    if (mode === 'signup' && !normaliseUkPhone(form.phone)) return setError(PHONE_ERROR)
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError('Please enter a valid email address.')
     if (form.password.length < 8) return setError('Your password needs at least 8 characters.')
     setBusy(true)
     try {
-      if (mode === 'signup') await signUp(form)
+      if (mode === 'signup') await signUp({ ...form, phone: normaliseUkPhone(form.phone) })
       else await logIn(form)
-      navigate('/account')
+      navigate(dest)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -89,6 +94,13 @@ export default function Login() {
             )}
             <Field label="Email" type="email" value={form.email} onChange={setF('email')} autoComplete="email" />
             <Field label="Password" type="password" value={form.password} onChange={setF('password')} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+            {mode === 'signup' && (
+              // UK law: offers only with a box the customer ticks themselves (never pre-ticked)
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-white p-3.5 text-sm text-body">
+                <input type="checkbox" checked={form.marketingConsent} onChange={(e) => setForm((f) => ({ ...f, marketingConsent: e.target.checked }))} className="mt-0.5 size-5 shrink-0 accent-[#1e4fd8]" />
+                <span>Send me repair tips and offers by WhatsApp or email. You can opt out anytime.</span>
+              </label>
+            )}
             {error && <p role="alert" className="rounded-xl bg-[#FDECEA] px-4 py-2.5 text-sm font-semibold text-danger">{error}</p>}
             <Button type="submit" variant="dark" size="lg" className="w-full" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create account'}</Button>
           </form>

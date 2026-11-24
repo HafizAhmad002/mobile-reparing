@@ -1,6 +1,9 @@
 import { motion, useReducedMotion } from 'framer-motion'
 
 const EASE = [0.22, 1, 0.36, 1]
+// Start as soon as the top of the block is 60px inside the screen. (A share like 20% of the
+// block never happens for tall blocks, e.g. the accessories grid, which then stayed blank.)
+const VIEWPORT = { once: true, amount: 0, margin: '0px 0px -60px 0px' }
 
 // Fades children in and moves them up 24px when scrolled into view.
 export default function Reveal({ children, delay = 0, className = '', as = 'div' }) {
@@ -12,7 +15,7 @@ export default function Reveal({ children, delay = 0, className = '', as = 'div'
       className={className}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
+      viewport={VIEWPORT}
       transition={{ duration: 0.5, ease: EASE, delay }}
     >
       {children}
@@ -29,7 +32,7 @@ export function Stagger({ children, className = '' }) {
       className={className}
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true, amount: 0.2 }}
+      viewport={VIEWPORT}
       variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
     >
       {children}

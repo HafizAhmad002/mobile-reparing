@@ -8,7 +8,7 @@ import { SITE } from '../data/site'
 const values = [
   { icon: Hammer, title: 'I do every repair myself', text: 'The person you book is the person who fixes your phone. No handing it to someone else.' },
   { icon: Wallet, title: 'Honest prices', text: 'I tell you the price before I start. If we agree, I fix it. If not, you pay nothing.' },
-  { icon: ShieldCheck, title: 'Local parts, tested first', text: 'I use quality replacement parts sourced locally and test each one before it goes in. I’ll always tell you what I’m fitting.' },
+  { icon: ShieldCheck, title: 'Quality parts, tested first', text: 'I use quality replacement parts sourced locally and test each one before it goes in. I’ll always tell you what I’m fitting.' },
   { icon: MapPin, title: 'I come to you', text: 'Home, office or café across Manchester. You watch the repair — your phone never leaves your sight.' },
 ]
 
@@ -38,7 +38,7 @@ export default function About() {
       </section>
 
       <Reveal className="mt-16 lg:mt-[100px]">
-        <div className="rounded-[36px] border border-line bg-white p-8 md:p-12">
+        <div className="rounded-[28px] border border-line bg-white p-6 sm:rounded-[36px] sm:p-8 md:p-12">
           <p className="text-[13px] font-bold uppercase tracking-[0.08em] text-accent">My story</p>
           <p className="mt-4 max-w-[760px] text-[clamp(20px,2.4vw,28px)] font-bold leading-[1.35] tracking-[-0.02em]">
             [Write a few sentences here: how you started repairing phones, how many years you have been doing it, and why you decided to repair at people’s doors.]

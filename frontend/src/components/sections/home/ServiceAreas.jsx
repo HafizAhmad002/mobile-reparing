@@ -29,7 +29,7 @@ export default function ServiceAreas() {
 
   return (
     <section className="mx-auto max-w-[1200px] px-6">
-      <div className="grid items-center gap-8 rounded-[36px] border border-line bg-white p-6 md:grid-cols-2 md:p-10">
+      <div className="grid items-center gap-8 rounded-[28px] border border-line bg-white p-5 sm:rounded-[36px] sm:p-6 md:grid-cols-2 md:p-10">
         <div>
           <p className="mb-3 text-[13px] font-bold uppercase tracking-[0.08em] text-accent">Service areas</p>
           <h2 className="text-[clamp(28px,3.4vw,40px)] font-extrabold leading-[1.1] tracking-[-0.03em]">
@@ -53,7 +53,7 @@ export default function ServiceAreas() {
 
         {/* Stylised map */}
         <div
-          className="relative h-[380px] overflow-hidden rounded-[28px] bg-[#EEF1F6]"
+          className="relative h-[300px] overflow-hidden sm:h-[380px] rounded-[28px] bg-[#EEF1F6]"
           style={{
             backgroundImage:
               'linear-gradient(#E1E5EC 1px, transparent 1px), linear-gradient(90deg, #E1E5EC 1px, transparent 1px)',
@@ -65,7 +65,7 @@ export default function ServiceAreas() {
           <div className="absolute left-[-5%] top-[48%] h-4 w-[110%] -rotate-[14deg] bg-white" />
           <div className="absolute left-[46%] top-[-5%] h-[110%] w-4 rotate-[12deg] bg-white" />
           <motion.div
-            className="absolute left-1/2 top-1/2 size-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-accent bg-accent/10"
+            className="absolute left-1/2 top-1/2 size-[160px] -translate-x-1/2 sm:size-[200px] -translate-y-1/2 rounded-full border-2 border-dashed border-accent bg-accent/10"
             animate={reduce ? undefined : { scale: [1, 1.06, 1] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           />

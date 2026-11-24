@@ -1,37 +1,59 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, PenLine } from 'lucide-react'
+import { ArrowRight, Check, PenLine } from 'lucide-react'
 import SectionHeading from '../../ui/SectionHeading'
 import Icon from '../../ui/Icon'
+import { ProblemBox } from '../../MediaUpload'
 import { Stagger, StaggerItem } from '../../Reveal'
 import { services } from '../../../data/services'
 import { OTHER } from '../../../data/content'
 
-// "Other problem" card: the customer types their own problem and goes straight to booking
+// "Other problem" card: the customer describes the problem (and can add photos / a video),
+// then goes to booking with all of it already filled in
 function OtherCard() {
   const navigate = useNavigate()
   const [note, setNote] = useState('')
+  const [files, setFiles] = useState([])
+  const ready = note.trim().length > 0 || files.length > 0
   const go = (e) => {
     e.preventDefault()
+    if (!ready) return
     const q = new URLSearchParams({ issue: OTHER })
     if (note.trim()) q.set('note', note.trim())
-    navigate(`/book?${q.toString()}`)
+    navigate(`/book?${q.toString()}`, { state: { files } }) // files can't go in the URL
   }
   return (
-    <form onSubmit={go} className="flex h-full flex-col rounded-[24px] border-2 border-dashed border-field bg-white p-6 transition duration-200 hover:border-accent">
-      <span className="grid size-12 place-items-center rounded-2xl bg-tint text-accent"><PenLine size={22} strokeWidth={2} aria-hidden="true" /></span>
-      <h3 className="mt-5 text-lg font-extrabold tracking-[-0.02em]">Other problem</h3>
-      <label htmlFor="home-other" className="mt-1.5 text-sm leading-relaxed text-muted">Not in the list? Tell us what’s wrong.</label>
-      <input
+    // Full width card: heading row, description box, then the button row
+    <form onSubmit={go} className="rounded-[24px] border-2 border-dashed border-field bg-white p-5 transition-colors duration-200 focus-within:border-accent hover:border-accent sm:p-6 lg:p-7">
+      <div className="flex items-start gap-4">
+        <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-tint text-accent"><PenLine size={22} strokeWidth={2} aria-hidden="true" /></span>
+        <div className="min-w-0">
+          <h3 className="text-lg font-extrabold tracking-[-0.02em] sm:text-xl">Other problem</h3>
+          <p className="mt-0.5 text-sm leading-relaxed text-muted">Not in the list? Tell us what’s wrong and add a photo or video if you can.</p>
+        </div>
+      </div>
+      <ProblemBox
         id="home-other"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="Describe your problem"
-        className="mt-3 min-h-11 w-full rounded-[14px] border border-field bg-white px-3.5 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent"
+        className="mt-5"
+        label="Describe your problem"
+        note={note}
+        onNote={setNote}
+        files={files}
+        onFiles={setFiles}
+        placeholder="e.g. The phone turns off when I make a call"
       />
-      <button type="submit" className="mt-3 inline-flex min-h-11 items-center justify-between rounded-full bg-ink px-5 text-sm font-bold text-white hover:bg-black">
-        Continue <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
-      </button>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm font-semibold text-body">
+          {['Free diagnosis', 'Price agreed before we start'].map((t) => (
+            <li key={t} className="flex items-center gap-1.5"><Check size={16} strokeWidth={2.5} className="text-success" aria-hidden="true" />{t}</li>
+          ))}
+        </ul>
+        {/* Grey until there is a description, a photo or a video */}
+        <button type="submit" disabled={!ready} title={ready ? undefined : 'Describe the problem or add a photo or video first'}
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent px-7 text-[15px] font-bold text-white transition-colors hover:bg-accent-dark disabled:cursor-not-allowed disabled:bg-[#D5D8E0] sm:w-auto">
+          Continue <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
+        </button>
+      </div>
     </form>
   )
 }
@@ -45,26 +67,28 @@ export default function ServicesGrid() {
         title="What can we fix?"
         text="Clear starting prices for every repair. The final price depends on your model and is agreed before we start."
       />
-      <Stagger className="mt-10 grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
+      <Stagger className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))] sm:gap-4">
         {services.map((s) => (
           <StaggerItem key={s.id}>
             <Link
               to={`/book?issue=${s.id}`}
-              className="flex h-full flex-col rounded-[24px] border border-line bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-[#C9D6FF]"
+              className="flex h-full items-start gap-4 rounded-[20px] border border-line bg-white p-4 transition duration-200 hover:-translate-y-1 hover:border-[#C9D6FF] sm:flex-col sm:items-stretch sm:gap-0 sm:rounded-[24px] sm:p-6"
             >
-              <span className="grid size-12 place-items-center rounded-2xl bg-tint text-accent">
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-tint text-accent sm:size-12">
                 <Icon name={s.icon} />
               </span>
-              <h3 className="mt-5 text-lg font-extrabold tracking-[-0.02em]">{s.name}</h3>
-              <p className="mt-1.5 flex-1 text-sm leading-relaxed text-muted">{s.short}</p>
-              <div className="mt-5 flex items-center justify-between text-sm font-bold">
-                <span>{s.priceLabel === 'From' ? `From ${s.price}` : 'Free check'}</span>
-                <ArrowRight size={16} strokeWidth={2} className="text-accent" aria-hidden="true" />
+              <div className="min-w-0 flex-1 sm:flex sm:flex-col">
+                <h3 className="text-base font-extrabold tracking-[-0.02em] sm:mt-5 sm:text-lg">{s.name}</h3>
+                <p className="mt-1 flex-1 text-[13px] leading-relaxed text-muted sm:mt-1.5 sm:text-sm">{s.short}</p>
+                <div className="mt-2 flex items-center justify-between text-sm font-bold sm:mt-5">
+                  <span>{s.priceLabel === 'From' ? `From ${s.price}` : 'Free check'}</span>
+                  <ArrowRight size={16} strokeWidth={2} className="text-accent" aria-hidden="true" />
+                </div>
               </div>
             </Link>
           </StaggerItem>
         ))}
-        <StaggerItem className="lg:col-span-2"><OtherCard /></StaggerItem>
+        <StaggerItem className="col-span-full"><OtherCard /></StaggerItem>
       </Stagger>
     </section>
   )

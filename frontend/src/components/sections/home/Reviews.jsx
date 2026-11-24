@@ -30,7 +30,7 @@ export default function Reviews() {
       <Stagger className="mt-10 grid gap-4 md:grid-cols-3">
         {reviews.map((r) => (
           <StaggerItem key={r.id}>
-            <figure className="flex h-full flex-col rounded-[24px] border border-line bg-white p-7 transition duration-200 hover:-translate-y-1 hover:border-[#C9D6FF]">
+            <figure className="flex h-full flex-col rounded-[24px] border border-line bg-white p-6 transition sm:p-7 duration-200 hover:-translate-y-1 hover:border-[#C9D6FF]">
               <Quote size={28} strokeWidth={2} className="fill-accent text-accent" aria-hidden="true" />
               <blockquote className="mt-4 flex-1 text-[15px] leading-relaxed text-body">{r.text}</blockquote>
               <figcaption className="mt-6 flex items-center gap-3">

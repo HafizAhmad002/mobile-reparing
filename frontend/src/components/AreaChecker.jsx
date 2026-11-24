@@ -23,9 +23,9 @@ export default function AreaChecker({ id = 'area-input', className = '' }) {
           value={value}
           onChange={(e) => { setValue(e.target.value); setResult(null) }}
           placeholder="Enter your area or postcode"
-          className="min-h-11 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted"
+          className="min-h-11 w-0 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted"
         />
-        <button type="submit" className="min-h-11 rounded-full bg-ink px-6 text-sm font-bold text-white hover:bg-black">Check</button>
+        <button type="submit" className="min-h-11 rounded-full bg-ink px-5 text-sm font-bold sm:px-6 text-white hover:bg-black">Check</button>
       </form>
       {result && (
         <p role="status" className={`mt-3 text-sm font-semibold ${result.status === 'yes' ? 'text-success' : 'text-body'}`}>

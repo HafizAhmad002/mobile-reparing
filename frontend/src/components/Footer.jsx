@@ -44,9 +44,9 @@ const linkCls = 'text-sm text-[#DCE4FF] transition-colors hover:text-white'
 export default function Footer() {
   return (
     <footer className="mt-16 bg-accent text-white lg:mt-[110px]">
-      <div className="mx-auto flex max-w-[1200px] flex-wrap gap-10 px-6 pb-7 pt-[60px]">
+      <div className="mx-auto flex max-w-[1200px] flex-wrap gap-x-6 gap-y-10 px-6 pb-7 pt-12 sm:gap-10 sm:pt-[60px]">
         {/* Brand */}
-        <div className="min-w-[220px] flex-[1.4]">
+        <div className="w-full sm:w-auto sm:min-w-[220px] sm:flex-[1.4]">
           <Link to="/" className="flex items-center gap-2.5" aria-label="FixPoint home">
             <span className="grid size-9 place-items-center rounded-[11px] bg-white text-accent">
               <Smartphone size={18} strokeWidth={2} />
@@ -62,7 +62,7 @@ export default function Footer() {
 
         {/* Link columns */}
         {COLUMNS.map((col) => (
-          <nav key={col.title} aria-label={col.title} className="min-w-[140px] flex-1">
+          <nav key={col.title} aria-label={col.title} className="min-w-[120px] flex-1 sm:min-w-[140px]">
             <h3 className="mb-3.5 text-[15px] font-bold">{col.title}</h3>
             <ul className="space-y-1">
               {col.links.map((l) => (
@@ -77,7 +77,7 @@ export default function Footer() {
         ))}
 
         {/* Newsletter */}
-        <div className="min-w-[300px] flex-[1.6]">
+        <div className="w-full sm:w-auto sm:min-w-[300px] sm:flex-[1.6]">
           <h3 className="mb-3.5 text-[15px] font-bold">Get repair tips &amp; offers</h3>
           <form
             onSubmit={(e) => e.preventDefault()}
@@ -88,7 +88,7 @@ export default function Footer() {
               id="footer-join"
               type="text"
               placeholder="Email or WhatsApp number"
-              className="min-h-11 min-w-0 flex-1 bg-transparent px-4 text-sm text-ink outline-none placeholder:text-muted"
+              className="min-h-11 w-0 min-w-0 flex-1 bg-transparent px-4 text-sm text-ink outline-none placeholder:text-muted"
             />
             <button
               type="submit"
@@ -116,7 +116,7 @@ export default function Footer() {
       <div className="border-t border-white/20">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-6 py-5 text-[13px] text-[#DCE4FF]">
           <p>© FixPoint. All rights reserved.</p>
-          <div className="flex gap-5">
+          <div className="flex flex-wrap gap-x-5 gap-y-1">
             {['Terms', 'Privacy', 'Warranty policy'].map((t) => (
               <a key={t} href="#" className="inline-flex min-h-8 items-center hover:text-white">{t}</a>
             ))}

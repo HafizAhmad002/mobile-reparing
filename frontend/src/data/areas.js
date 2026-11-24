@@ -28,3 +28,9 @@ export const allAreas = areaGroups.flatMap((g) => g.areas)
 
 // Areas shown on the Home page (short list)
 export const featuredAreas = ['City Centre', 'Didsbury', 'Chorlton', 'Fallowfield', 'Salford Quays']
+
+// Service area for the booking map: a circle around Manchester city centre.
+// 15 km covers every area above (Altrincham, Stockport, Ashton, Whitefield are about 10–13 km out).
+// districts: extra postcode districts you cover even outside the circle, with an optional call-out fee (£)
+// e.g. [{ code: 'WA14', fee: 10 }]
+export const SERVICE_AREA = { lat: 53.4808, lon: -2.2426, radiusKm: 15, districts: [] }

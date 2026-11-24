@@ -17,7 +17,7 @@ export const issues = [
 export const trustItems = [
   { icon: 'ShieldCheck', title: '[X]-day warranty', text: 'Parts and labour covered' },
   { icon: 'Zap', title: 'Same-day repair', text: 'Most jobs done in one visit' },
-  { icon: 'Cpu', title: 'Quality local parts', text: 'Sourced locally, tested before fitting' },
+  { icon: 'Cpu', title: 'Quality parts', text: 'Sourced locally, tested before fitting' },
   { icon: 'Wallet', title: 'Pay after repair', text: 'Price agreed with you first' },
 ]
 

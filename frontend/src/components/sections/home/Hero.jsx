@@ -3,26 +3,21 @@ import { useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ShieldCheck, Truck } from 'lucide-react'
 import Phone3D from '../../ui/Phone3D'
+import Select from '../../ui/Select'
+import { ProblemBox } from '../../MediaUpload'
+import PostcodeCheck from '../../PostcodeCheck'
 import { brands, phoneBrands, tabletBrands } from '../../../data/catalog'
 import { issues, OTHER } from '../../../data/content'
 
-// Small labelled select used inside the quick-quote bar
-function QuoteSelect({ label, value, onChange, children, disabled }) {
-  return (
-    <label className="block min-w-[150px] flex-1 rounded-[20px] bg-[#F6F7F9] px-4 py-2.5 text-left">
-      <span className="block text-xs font-bold text-muted">{label}</span>
-      <select
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        className="mt-0.5 min-h-8 w-full cursor-pointer bg-transparent text-[15px] font-bold text-ink outline-none disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {children}
-      </select>
-    </label>
-  )
-}
+// "Other" is not needed here: the description box below is for any problem
+const ISSUE_OPTIONS = issues.filter((i) => i !== OTHER).map((i) => ({ value: i, label: i }))
 
+// Each dropdown in the quick-quote bar: full width on phones, side by side from 640px
+const QUOTE = 'w-full sm:w-auto sm:min-w-[150px] sm:flex-1'
+const BRAND_OPTIONS = [
+  ...phoneBrands.map((b) => ({ value: b.id, label: b.name, group: 'Phones' })),
+  ...tabletBrands.map((b) => ({ value: b.id, label: b.name, group: 'Tablets' })),
+]
 
 // Floating chip over the phones (bobs 6px up and down)
 function FloatChip({ className, icon, title, text, delay = 0, reduce }) {
@@ -48,10 +43,11 @@ export default function Hero() {
   const brand = brands.find((b) => b.id === brandId)
   const [model, setModel] = useState(brand.models[0].name)
   const [issue, setIssue] = useState(issues[0])
-  const [note, setNote] = useState('') // own words when "Other" is chosen
+  const [note, setNote] = useState('') // own words (optional, for any problem)
+  const [files, setFiles] = useState([]) // photos / video (optional)
 
-  const onBrand = (e) => {
-    const b = brands.find((x) => x.id === e.target.value)
+  const onBrand = (id) => {
+    const b = brands.find((x) => x.id === id)
     setBrandId(b.id)
     setModel(b.models[0].name) // model list follows the brand
   }
@@ -59,18 +55,19 @@ export default function Hero() {
   const onSubmit = (e) => {
     e.preventDefault()
     const q = new URLSearchParams({ kind: brand.kind, brand: brand.name, model, issue })
-    if (issue === OTHER && note.trim()) q.set('note', note.trim())
-    navigate(`/book?${q.toString()}`)
+    if (note.trim()) q.set('note', note.trim())
+    // The booking opens with the description and photos already filled in (files can't go in the URL)
+    navigate(`/book?${q.toString()}`, { state: { files } })
   }
 
   return (
-    <section className="px-6 pt-[72px] text-center max-sm:pt-10">
+    <section className="px-6 pt-10 text-center sm:pt-[72px]">
       <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-line bg-white px-3.5 py-1.5 text-[13px] font-semibold">
         <span className="size-2 rounded-full bg-success" aria-hidden="true" />
         Doorstep phone repair in Manchester
       </div>
 
-      <h1 className="mx-auto mt-[22px] max-w-[900px] text-[clamp(40px,6vw,72px)] font-extrabold leading-[1.02] tracking-[-0.035em]">
+      <h1 className="mx-auto mt-[22px] max-w-[900px] text-[clamp(34px,8vw,72px)] font-extrabold leading-[1.02] tracking-[-0.035em]">
         Broken phone? We fix it at your doorstep.
       </h1>
       <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-relaxed text-muted sm:text-[18px]">
@@ -80,43 +77,34 @@ export default function Hero() {
       {/* Quick-quote bar */}
       <form
         onSubmit={onSubmit}
-        className="mx-auto mt-9 flex max-w-[860px] flex-wrap items-stretch gap-2.5 rounded-[28px] border border-line bg-white p-2.5 shadow-[0_16px_40px_-20px_rgba(14,15,19,0.3)]"
+        className="mx-auto mt-8 flex max-w-[860px] flex-wrap items-stretch gap-2 rounded-[24px] sm:mt-9 sm:gap-2.5 sm:rounded-[28px] border border-line bg-white p-2.5 shadow-[0_16px_40px_-20px_rgba(14,15,19,0.3)]"
       >
-        <QuoteSelect label="Brand" value={brandId} onChange={onBrand}>
-          <optgroup label="Phones">
-            {phoneBrands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </optgroup>
-          <optgroup label="Tablets">
-            {tabletBrands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </optgroup>
-        </QuoteSelect>
-        <QuoteSelect label="Model" value={model} onChange={(e) => setModel(e.target.value)}>
-          {brand.models.map((m) => <option key={m.id} value={m.name}>{m.name}</option>)}
-        </QuoteSelect>
-        <QuoteSelect label="What's wrong?" value={issue} onChange={(e) => setIssue(e.target.value)}>
-          {issues.map((i) => <option key={i} value={i}>{i}</option>)}
-        </QuoteSelect>
-        {issue === OTHER && (
-          <label className="block w-full basis-full rounded-[20px] bg-[#F6F7F9] px-4 py-2.5 text-left">
-            <span className="block text-xs font-bold text-muted">Describe your problem</span>
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Phone restarts by itself when I open the camera"
-              className="mt-0.5 min-h-8 w-full bg-transparent text-[15px] font-semibold text-ink outline-none placeholder:font-normal placeholder:text-muted"
-            />
-          </label>
-        )}
+        <Select variant="quote" className={QUOTE} label="Brand" value={brandId} onChange={onBrand} options={BRAND_OPTIONS} />
+        <Select variant="quote" className={QUOTE} label="Model" value={model} onChange={setModel} options={brand.models.map((m) => ({ value: m.name, label: m.name }))} />
+        <Select variant="quote" className={QUOTE} label="What's wrong?" value={issue} onChange={setIssue} options={ISSUE_OPTIONS} />
         <motion.button
           type="submit"
           whileHover={reduce ? undefined : { y: -2 }}
           whileTap={{ scale: 0.98 }}
-          className="inline-flex h-[60px] min-w-[140px] flex-1 items-center justify-center gap-2 rounded-[20px] bg-accent px-7 text-base font-bold text-white transition-colors hover:bg-accent-dark max-sm:w-full sm:flex-none"
+          className="order-last inline-flex h-14 w-full items-center justify-center gap-2 rounded-[20px] bg-accent px-7 sm:order-none text-base font-bold text-white transition-colors hover:bg-accent-dark sm:h-[60px] sm:w-auto sm:min-w-[140px] sm:flex-none"
         >
           Get price <ArrowRight size={16} strokeWidth={2} />
         </motion.button>
+        {/* Same box as on the booking page: optional, and carried over to the booking */}
+        <ProblemBox
+          id="hero-more"
+          className="basis-full px-1.5 pb-1.5 pt-1 text-left"
+          label="Describe your problem"
+          hint="Tell us what is happening. A photo or short video helps us bring the right parts."
+          note={note}
+          onNote={setNote}
+          files={files}
+          onFiles={setFiles}
+          placeholder="e.g. The screen flickers since I dropped it last week"
+        />
       </form>
       <p className="mt-4 text-[13px] text-muted">No hidden charges • Free diagnosis if we can't fix it</p>
+      <PostcodeCheck className="mt-5" />
 
       {/* Real iPhone (3D: turns with the pointer, sways on its own) */}
       <div className="relative mx-auto mt-8 flex max-w-[980px] justify-center sm:mt-10">
@@ -125,7 +113,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
-          <Phone3D src="/images/hero/iphone.png" alt="iPhone, back and front" className="h-[300px] sm:h-[400px] lg:h-[430px]" />
+          <Phone3D src="/images/hero/iphone.png" alt="iPhone, back and front" className="h-[260px] sm:h-[400px] lg:h-[430px]" />
         </motion.div>
 
         <FloatChip

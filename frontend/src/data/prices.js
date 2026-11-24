@@ -3,7 +3,8 @@
 //   { min, max }   a range, e.g. £35 – £45
 //   { from }       "From £15"
 //   { fixed }      one price, e.g. £10
-//   { free: true } FREE
+//   { free: true } FREE (listed first on the site)
+// `photo` (optional) picks a picture from public/images/prices when the row has no `issue`.
 // `issue` links a row to a repair on the booking page. `models` / `pattern` / `brands` tell the
 // estimate (lib/pricing.js) which phones the row applies to.
 
@@ -20,7 +21,7 @@ export const iphoneRows = [
   { id: 'ip-port', label: 'Charging port / audio jack', min: 25, max: 45, issue: 'charging-port' },
   { id: 'ip-camera', label: 'Camera lens / rear camera', min: 30, max: 60, issue: 'camera' },
   { id: 'ip-water', label: 'Water damage diagnosis', free: true, issue: 'water-damage' },
-  { id: 'ip-labour', label: 'Labour fee (no parts needed)', fixed: 15 },
+  { id: 'ip-labour', label: 'Labour fee (no parts needed)', fixed: 15, photo: 'parts' },
 ]
 
 export const androidRows = [
@@ -31,16 +32,16 @@ export const androidRows = [
   { id: 'an-battery', label: 'Battery replacement', min: 22, max: 35, issue: 'battery' },
   { id: 'an-port', label: 'Charging port', min: 25, max: 40, issue: 'charging-port' },
   { id: 'an-back', label: 'Back cover / camera glass', min: 20, max: 45, issue: 'back-glass' },
-  { id: 'an-diag', label: 'Diagnosis & software update', free: true, issue: 'software-data' },
+  { id: 'an-diag', label: 'Diagnosis & software update', free: true, issue: 'software-data', photo: 'phone-laptop' },
 ]
 
 export const extraRows = [
-  { id: 'ex-health', label: 'Full phone health check', free: true },
-  { id: 'ex-backup', label: 'Data backup / transfer', fixed: 10 },
-  { id: 'ex-unlock', label: 'Phone unlocking', min: 15, max: 30 },
-  { id: 'ex-protector', label: 'Screen protector installation', min: 5, max: 10 },
-  { id: 'ex-minor', label: 'Minor repair / quick fix', from: 15 },
-  { id: 'ex-collect', label: 'Collection & delivery (local)', free: true },
+  { id: 'ex-health', label: 'Full phone health check', free: true, photo: 'repair-mat', icon: 'ClipboardList' },
+  { id: 'ex-backup', label: 'Data backup / transfer', fixed: 10, photo: 'backup', icon: 'HardDrive' },
+  { id: 'ex-unlock', label: 'Phone unlocking', min: 15, max: 30, photo: 'phone-laptop', icon: 'Unlock' },
+  { id: 'ex-protector', label: 'Screen protector installation', min: 5, max: 10, photo: 'protector', icon: 'ShieldCheck' },
+  { id: 'ex-minor', label: 'Minor repair / quick fix', from: 15, photo: 'parts', icon: 'Wrench' },
+  { id: 'ex-collect', label: 'Collection & delivery (local)', free: true, photo: 'on-the-go', icon: 'Truck' },
 ]
 
 const p = (n) => `£${n}`
@@ -53,3 +54,10 @@ export function priceText(row) {
   if (row.min === row.max) return p(row.min)
   return `${p(row.min)} – ${p(row.max)}`
 }
+
+// Photo for a row (public/images/prices, see CREDITS.md there). Uses `photo`, else the row's repair (`issue`).
+export const rowPhoto = (row) => `/images/prices/${row.photo || row.issue || 'repair-mat'}.jpg`
+
+// Same rows with the FREE ones first (order otherwise unchanged). For display only:
+// lib/pricing.js reads the original order.
+export const freeFirst = (rows) => [...rows].sort((a, b) => Number(!!b.free) - Number(!!a.free))
